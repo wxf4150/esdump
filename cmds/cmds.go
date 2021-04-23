@@ -19,7 +19,7 @@ var exportCmd = &cobra.Command{
 	Long:  `elasticsearch export`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Printf("export index %s to %s",IndexName,Output)
-		ExportData(Input)
+		ExportData(Output)
 	},
 }
 
@@ -38,8 +38,8 @@ var importCmd = &cobra.Command{
 var Output string
 var Input string
 func init(){
-	exportCmd.Flags().StringVar(&Output,"o","./tmp_export.json.gz","export desk filename")
-	importCmd.Flags().StringVar(&Input,"i","./tmp_import.json.gz","import  filename")
+	exportCmd.Flags().StringVarP(&Output,"o","o","./tmp_export.json.gz","export desk filename")
+	importCmd.Flags().StringVarP(&Input,"i","i","./tmp_import.json.gz","import  filename")
 	//importCmd.MarkFlagRequired("i")
 	//exportCmd.MarkFlagRequired("o")
 
@@ -179,35 +179,3 @@ type hitItem struct {
 	ID string
 	RawData json.RawMessage
 }
-//func getBsData(chClient *channel.Client,chainCode,prekey ,startKey string)(bs []byte,err error){
-//	log.Printf("chainCode: %s prekey: %s startKey: %s",chainCode,prekey ,startKey)
-//	res, err1 := chClient.Query(channel.Request{ChaincodeID: chainCode,
-//		Fcn:  "GetAllProto",
-//		Args: [][]byte{[]byte(prekey),[]byte(startKey), []byte(CONF.Limit) },
-//	})
-//	if err1 != nil {
-//		return nil ,err1
-//	}
-//	if res.ChaincodeStatus != 200 {
-//		err = errors.New(string(res.Payload))
-//		return
-//	}
-//	if res.Payload == nil {
-//		log.Println("无新数据")
-//		return
-//	}
-//	return res.Payload,nil
-//}
-
-//func main(){
-//	if CONF.Cmd=="export"{
-//		err:=ExportData(CONF.PreKey,CONF.StartKey,CONF.Output)
-//		log.Println(err)
-//		return
-//	}
-//	if CONF.Cmd=="import"{
-//		err:=ImportData(CONF.Input)
-//		log.Println(err)
-//		return
-//	}
-//}
