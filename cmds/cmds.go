@@ -30,7 +30,7 @@ var importCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Printf("import index %s from %s",IndexName,Input)
 		err:=ImportData(Input)
-		if err == nil {
+		if err != nil {
 			log.Println(err)
 		}
 	},
@@ -96,8 +96,8 @@ func ImportData(inputFile string)(err error){
 		_,err=io.ReadFull(zipReader,bsLen[:])
 		if err!=nil{
 			if errors.Is(err,io.EOF){
-				goto LAST
 				err=nil
+				goto LAST
 			}
 			log.Println("bsLen read err",err)
 			return err
@@ -107,7 +107,9 @@ func ImportData(inputFile string)(err error){
 	LAST:
 	if iserv.NumberOfActions()>0{
 		_,err=iserv.Do(context.Background())
-		log.Println("bsLen read err",err)
+		if err != nil {
+			log.Println("es err", err)
+		}
 	}
 	return
 }
