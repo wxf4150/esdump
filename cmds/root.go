@@ -17,6 +17,7 @@ package cmds
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 	"log"
@@ -43,13 +44,17 @@ var RootCmd = &cobra.Command{
 		},
 		PersistentPreRun:func(cmd *cobra.Command, args []string){
 			log.Println("execute ",cmd.Use)
+			timeStart=time.Now()
+		},
+		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
+			log.Printf("time spend %s",time.Now().Sub(timeStart).String())
+			return nil
 		},
 }
+var timeStart time.Time
 
 var EsUrl string
 var IndexName string
-
-
 func init() {
 	//log.Println("cobra root init")
 	 RootCmd.PersistentFlags().StringVar(&EsUrl,"es","http://localhost:9200","es url")

@@ -10,6 +10,10 @@
  - ./esdump import -h
  - ./esdump expport -h
 
+**note**:
+- when use import;  you should setting the target index's _mapping .
+
+
 command help:
 ```shell script
  ./esdump -h
@@ -41,6 +45,21 @@ Usage:
 Flags:
   -h, --help       help for export
       --o string   export desk filename (default "./tmp_export.json.gz")
+
+Global Flags:
+      --es string      es url (default "http://localhost:9200")
+      --index string   index name (default "my_index")
+
+
+ ./esdump import -h
+elasticsearch import
+
+Usage:
+  esdump import [flags]
+
+Flags:
+  -h, --help       help for import
+      --i string   import  filename (default "./tmp_import.json.gz")
 
 Global Flags:
       --es string      es url (default "http://localhost:9200")

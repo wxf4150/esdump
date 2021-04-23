@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 	"io"
 	"log"
+	"math"
 	"os"
-	"time"
 )
 var exportCmd = &cobra.Command{
 	Use:   "export",
@@ -114,7 +114,6 @@ func ImportData(inputFile string)(err error){
 	return
 }
 func ExportData(outputFile string)(err error) {
-	start:=time.Now()
 	sfile, err1 := os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	defer sfile.Close()
 	if err1 != nil {
@@ -154,7 +153,7 @@ func ExportData(outputFile string)(err error) {
 				count++
 				bsCounter+=len(bs)
 				if count%200==0{
-					log.Printf("total exported %d items; total_raw_bytes: %f MB", count, float64(int64(float64(bsCounter)/1024/1024*100))/100)
+					log.Printf("total exported %d items; total_raw_bytes: %.2f MB", count, getMb(int64(bsCounter)))
 				}
 			}
 			if len(res.Hits.Hits)<100{
@@ -166,9 +165,15 @@ func ExportData(outputFile string)(err error) {
 	if err != nil {
 		log.Print(err)
 	}
-	log.Printf("total exported %d items; total_raw_bytes: %f MB", count, float64(int64(float64(bsCounter)/1024/1024*100))/100)
-	log.Printf("time spend %s",time.Now().Sub(start).String())
+	stat,err1:=sfile.Stat()
+	fsize:=getMb(stat.Size())
+	log.Printf("total exported %d items; total_raw_bytes: %.2f MB;the gzip size: %.2f MB", count, getMb(int64(bsCounter)),fsize)
 	return err
+}
+func getMb(size int64) float64{
+	tmpf:=float64(size)/(1024*1024)*100
+	tmpf=math.Trunc(tmpf)/100
+	return tmpf
 }
 type hitItem struct {
 	ID string
