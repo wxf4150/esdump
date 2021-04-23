@@ -15,8 +15,8 @@ import (
 )
 var exportCmd = &cobra.Command{
 	Use:   "export",
-	Short: "导出数据",
-	Long:  `导出数据`,
+	Short: "elasticsearch export",
+	Long:  `elasticsearch export`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Printf("export index %s to %s",IndexName,Output)
 		ExportData(Input)
@@ -25,8 +25,8 @@ var exportCmd = &cobra.Command{
 
 var importCmd = &cobra.Command{
 	Use:   "import",
-	Short: "导入数据",
-	Long:  `导入数据`,
+	Short: "elasticsearch import",
+	Long:  `elasticsearch import`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Printf("import index %s from %s",IndexName,Input)
 		err:=ImportData(Input)

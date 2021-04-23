@@ -33,9 +33,9 @@ func Execute() {
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "cmds",
+	Use:   "esdump",
 	Short: "es import export",
-	Long: `服务杂项 `,
+	Long: `es import export `,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 		Run: func(cmd *cobra.Command, args []string) {
