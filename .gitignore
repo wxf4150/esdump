@@ -15,7 +15,7 @@ Thumbs.db
 *.ini
 nohup.out
 var/
-tmp
+tmp*
 bin/
 */bin/*
 .idea/*
