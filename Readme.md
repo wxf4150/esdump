@@ -11,7 +11,7 @@
  - ./esdump expport -h
 
 command help:
-```sh
+```shell script
  ./esdump -h
 es import export
 
@@ -30,4 +30,20 @@ Flags:
       --index string   index name (default "my_index")
 
 Use "esdump [command] --help" for more information about a command.
+
+
+./esdump  export -h
+elasticsearch export
+
+Usage:
+  esdump export [flags]
+
+Flags:
+  -h, --help       help for export
+      --o string   export desk filename (default "./tmp_export.json.gz")
+
+Global Flags:
+      --es string      es url (default "http://localhost:9200")
+      --index string   index name (default "my_index")
+
 ```
