@@ -131,9 +131,9 @@ func ExportData(outputFile string)(err error) {
 	for{
 		pcounter++;
 		//for test
-		if pcounter > 5 {
-			break
-		}
+		//if pcounter > 5 {
+		//	break
+		//}
 		res,err:=pager.Do(context.Background())
 		if err == nil {
 			for _, hit := range res.Hits.Hits {
