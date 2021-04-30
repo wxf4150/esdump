@@ -6,6 +6,9 @@
  
  usage:
  - go build 
+ - ./esdump export --index my_index  -o ./my_index.json.gz  #export  my_index to file  myindex.json.gz
+ - ./esdump import --index my_index1 -i ./my_index.json.gz  #import   file  my_index.json.gz  to my_index1
+ 
  - ./esdump -h
  - ./esdump import -h
  - ./esdump expport -h

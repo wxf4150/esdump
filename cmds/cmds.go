@@ -84,7 +84,7 @@ func ImportData(inputFile string)(err error){
 		req:= elastic.NewBulkIndexRequest()
 		req.Id(item.ID).Doc(item.RawData)
 		iserv.Add(req)
-		if iserv.NumberOfActions()>99{
+		if iserv.NumberOfActions()>999{
 			_,err=iserv.Do(context.Background())
 			if err != nil {
 				log.Println(err)
