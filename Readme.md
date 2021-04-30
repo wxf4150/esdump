@@ -4,14 +4,18 @@
 - speedup to 84 times than nodejs-[elasticsearch-dump](https://github.com/elasticsearch-dump/elasticsearch-dump)  
  - i tested on 60000 docs of raw bytes 106M ;
  
- usage:
- - go build 
- - ./esdump export --index my_index  -o ./my_index.json.gz  #export  my_index to file  myindex.json.gz
- - ./esdump import --index my_index1 -i ./my_index.json.gz  #import   file  my_index.json.gz  to my_index1
+
  
- - ./esdump -h
- - ./esdump import -h
- - ./esdump expport -h
+ usage:
+ ```shell script
+go build 
+./esdump export --index my_index  -o ./my_index.json.gz  #export  my_index to file  myindex.json.gz
+./esdump import --index my_index1 -i ./my_index.json.gz  #import   file  my_index.json.gz  to my_index1
+./esdump export --es http://server1:9200 -o - --index tmp_index | ./esdump import --es http://server2:9200 --index tmp_index1  -i - #export server1 tmp_index to stdout and pipe to next Import
+ ./esdump -h
+./esdump import -h
+./esdump expport -h
+ ```
 
 **note**:
 - when use import;  you should setting the target index's _mapping .
@@ -47,7 +51,7 @@ Usage:
 
 Flags:
   -h, --help       help for export
-      --o string   export desk filename (default "./tmp_export.json.gz")
+      --o string   export desk filename; use - for stdout (default "./tmp_export.json.gz")
 
 Global Flags:
       --es string      es url (default "http://localhost:9200")
@@ -62,7 +66,7 @@ Usage:
 
 Flags:
   -h, --help       help for import
-      --i string   import  filename (default "./tmp_import.json.gz")
+      --i string   import  filename; use - for stdin (default "./tmp_import.json.gz")
 
 Global Flags:
       --es string      es url (default "http://localhost:9200")

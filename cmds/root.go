@@ -43,11 +43,12 @@ var RootCmd = &cobra.Command{
 			cmd.Usage()
 		},
 		PersistentPreRun:func(cmd *cobra.Command, args []string){
+			log.SetOutput(os.Stderr)
 			log.Println("execute ",cmd.Use)
 			timeStart=time.Now()
 		},
 		PersistentPostRunE: func(cmd *cobra.Command, args []string) error {
-			log.Printf("time spend %s",time.Now().Sub(timeStart).String())
+			log.Printf("%s time spend %s",cmd.Use,time.Now().Sub(timeStart).String())
 			return nil
 		},
 }
@@ -56,6 +57,7 @@ var timeStart time.Time
 var EsUrl string
 var IndexName string
 func init() {
+	log.SetOutput(os.Stderr)
 	//log.Println("cobra root init")
 	 RootCmd.PersistentFlags().StringVar(&EsUrl,"es","http://localhost:9200","es url")
 	RootCmd.PersistentFlags().StringVar(&IndexName,"index","my_index","index name")

@@ -19,7 +19,7 @@ var exportCmd = &cobra.Command{
 	Long:  `elasticsearch export`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Printf("export index %s to %s",IndexName,Output)
-		ExportData(Output)
+		ExportData(Output,EsUrl,IndexName)
 	},
 }
 
@@ -29,7 +29,7 @@ var importCmd = &cobra.Command{
 	Long:  `elasticsearch import`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Printf("import index %s from %s",IndexName,Input)
-		err:=ImportData(Input)
+		err:=ImportData(Input,EsUrl,IndexName)
 		if err != nil {
 			log.Println(err)
 		}
@@ -38,8 +38,8 @@ var importCmd = &cobra.Command{
 var Output string
 var Input string
 func init(){
-	exportCmd.Flags().StringVarP(&Output,"o","o","./tmp_export.json.gz","export desk filename")
-	importCmd.Flags().StringVarP(&Input,"i","i","./tmp_import.json.gz","import  filename")
+	exportCmd.Flags().StringVarP(&Output,"o","o","./tmp_export.json.gz","export dest filename; use - for stdout")
+	importCmd.Flags().StringVarP(&Input,"i","i","./tmp_import.json.gz","import filename; use - for stdin")
 	//importCmd.MarkFlagRequired("i")
 	//exportCmd.MarkFlagRequired("o")
 
@@ -47,8 +47,17 @@ func init(){
 	RootCmd.AddCommand(importCmd)
 }
 
-func ImportData(inputFile string)(err error){
-	infile,err1:=os.Open(inputFile)
+func ImportData(inputFile ,esUrl,indexName string)(err error){
+	var infile *os.File
+	if inputFile=="-"{
+		infile=os.Stdin
+	}else{
+		infile,err=os.Open(inputFile)
+	}
+	if err != nil {
+		log.Fatal("open inputFile",inputFile,err)
+	}
+
 	defer infile.Close()
 	zipReader,err1 := gzip.NewReader(infile)
 	if err1 != nil {
@@ -58,7 +67,7 @@ func ImportData(inputFile string)(err error){
 	if err1 != nil {
 		return err1
 	}
-	iserv:=GetEsIndexService(EsUrl,IndexName)
+	iserv:=GetEsIndexService(esUrl,indexName)
 
 	bsLen:=[4]byte{}
 	_,err=io.ReadFull(zipReader,bsLen[:])
@@ -111,20 +120,26 @@ func ImportData(inputFile string)(err error){
 			log.Println("es err", err)
 		}
 	}
+	log.Printf("finish import row count %d",counter)
 	return
 }
-func ExportData(outputFile string)(err error) {
-	sfile, err1 := os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
-	defer sfile.Close()
-	if err1 != nil {
-		log.Print("open file err", err1)
-		return err1
+func ExportData(outputFile ,esUrl,indexName string)(err error) {
+	var ofile *os.File
+	if outputFile=="-"{
+		ofile=os.Stdout
+	}else{
+		ofile, err= os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	}
-	zip := gzip.NewWriter(sfile)
-	defer zip.Close()
-	defer zip.Flush()
+	defer ofile.Close()
 
-	ss:=GetEsScrollService(EsUrl,IndexName)
+	if err != nil {
+		log.Print("open file err", err)
+		return err
+	}
+	zip := gzip.NewWriter(ofile)
+	defer zip.Flush()
+	defer zip.Close()
+	ss:=GetEsScrollService(esUrl,indexName)
 	pager:=ss.Size(100).Query(elastic.MatchAllQuery{})
 	pcounter := 0
 	count:=0
@@ -165,7 +180,7 @@ func ExportData(outputFile string)(err error) {
 	if err != nil {
 		log.Print(err)
 	}
-	stat,err1:=sfile.Stat()
+	stat,_:=ofile.Stat()
 	fsize:=getMb(stat.Size())
 	log.Printf("total exported %d items; total_raw_bytes: %.2f MB;the gzip size: %.2f MB", count, getMb(int64(bsCounter)),fsize)
 	return err
