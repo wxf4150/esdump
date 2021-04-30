@@ -73,3 +73,33 @@ Global Flags:
       --index string   index name (default "my_index")
 
 ```
+
+
+why it so quick?
+
+- esdump write in golang .
+- when export,  esdump never decode/encode the res.hits.source to an json object, it only save the res.hits.source bytes to gzip stream directly.  
+-  nodejs(elasticsearch-dump) may  decode/encode all "elasticsearch respose body" to json object when export.
+
+note:  res.hits.source is the document body from elasticsearch respose body
+
+
+the exportFile is gziped and the  format is below:
+```shell script
+hitItem1**BytesLen**(4byte)+hit1obj.bytes 
+hitItem2**BytesLen**(4byte)+hit2ob.bytes
+...
+...
+```
+
+hitItem golang define:
+```go
+type hitItem stuct{
+{
+   doc_id string
+   doc_rawBytes json.rawMessage // json.rawMessage  type  never decode/encode when json serialize or unserialize
+}
+//when export  hitItem is endcode to json_str;  i should use protoc-buffer, it will more quickly endcode.
+```
+
+sorry my bad english
