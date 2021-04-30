@@ -86,8 +86,8 @@ note:  res.hits.source is the document body from elasticsearch respose body
 
 the exportFile is gziped and the  format is below:
 ```shell script
-hitItem1 & bytesLen(4byte) & hit1obj.bytes 
-hitItem2 & bytesLen(4byte) & hit2ob.bytes
+hitItem1 & bytesLen(4byte) & hitItem1.bytes 
+hitItem2 & bytesLen(4byte) & hitItem2.bytes
 ...
 ...
 ```
