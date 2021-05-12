@@ -28,3 +28,4 @@ bak*
 log.log
 bin/
 .conf.yaml
+stock/

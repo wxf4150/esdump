@@ -12,6 +12,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"time"
 )
 var exportCmd = &cobra.Command{
 	Use:   "export",
@@ -19,7 +20,7 @@ var exportCmd = &cobra.Command{
 	Long:  `elasticsearch export`,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Printf("export index %s to %s",IndexName,Output)
-		ExportData(Output,EsUrl,IndexName)
+		ExportData(Output,EsUrl,IndexName,MatchBody)
 	},
 }
 
@@ -37,8 +38,11 @@ var importCmd = &cobra.Command{
 }
 var Output string
 var Input string
+var MatchBody string
 func init(){
 	exportCmd.Flags().StringVarP(&Output,"o","o","./tmp_export.json.gz","export dest filename; use - for stdout")
+	exportCmd.Flags().StringVarP(&MatchBody,"MatchBody","m","{\"match_all\":{}}","MatchBody, empty for match_all; example:{\"range\": {\"timestamp\": {\"gte\": \"2021-04-20\"}}}")
+
 	importCmd.Flags().StringVarP(&Input,"i","i","./tmp_import.json.gz","import filename; use - for stdin")
 	//importCmd.MarkFlagRequired("i")
 	//exportCmd.MarkFlagRequired("o")
@@ -123,7 +127,7 @@ func ImportData(inputFile ,esUrl,indexName string)(err error){
 	log.Printf("finish import row count %d",counter)
 	return
 }
-func ExportData(outputFile ,esUrl,indexName string)(err error) {
+func ExportData(outputFile ,esUrl,indexName,matchBody string)(err error) {
 	var ofile *os.File
 	if outputFile=="-"{
 		ofile=os.Stdout
@@ -140,7 +144,12 @@ func ExportData(outputFile ,esUrl,indexName string)(err error) {
 	defer zip.Flush()
 	defer zip.Close()
 	ss:=GetEsScrollService(esUrl,indexName)
-	pager:=ss.Size(100).Query(elastic.MatchAllQuery{})
+	if matchBody!=""{
+		rawQuery:=elastic.NewRawStringQuery(matchBody)
+		ss=ss.Query(rawQuery)
+		log.Println("export match:",matchBody)
+	}
+	pager:=ss.Size(100)//.Query(elastic.MatchAllQuery{})
 	pcounter := 0
 	count:=0
 	bsCounter:=0
@@ -174,6 +183,10 @@ func ExportData(outputFile ,esUrl,indexName string)(err error) {
 			if len(res.Hits.Hits)<100{
 				goto RETURN
 			}
+		}
+		if err != nil {
+			log.Println(err)
+			time.Sleep(time.Second)
 		}
 	}
 	RETURN:

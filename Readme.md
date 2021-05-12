@@ -11,7 +11,10 @@
 go build 
 ./esdump export --index my_index  -o ./my_index.json.gz  #export  my_index to file  myindex.json.gz
 ./esdump import --index my_index1 -i ./my_index.json.gz  #import   file  my_index.json.gz  to my_index1
-./esdump export --es http://server1:9200 -o - --index tmp_index | ./esdump import --es http://server2:9200 --index tmp_index1  -i - #export server1 tmp_index to stdout and pipe to next Import
+./esdump export --es http://server1:9200 -o - --index tmp_index | ssh server2 ./esdump import --es http://localhost:9200 --index tmp_index1  -i - #export server1 tmp_index to stdout and pipe to next Import
+
+#export which match body
+./esdump  export --es http://server1:9200  --MatchBody '{"range": {"eventTimestamp": {"gte": "2021-05-07T10:32:20.170178Z"}}}' --index events
  ./esdump -h
 ./esdump import -h
 ./esdump expport -h
@@ -50,6 +53,7 @@ Usage:
   esdump export [flags]
 
 Flags:
+  -m, --MatchBody string   MatchBody, empty for match_all; example:{"range": {"timestamp": {"gte": "2021-04-20"}}} (default "{\"match_all\":{}}")
   -h, --help       help for export
       --o string   export desk filename; use - for stdout (default "./tmp_export.json.gz")
 
