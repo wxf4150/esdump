@@ -12,7 +12,6 @@ import (
 	"log"
 	"math"
 	"os"
-	"time"
 )
 var exportCmd = &cobra.Command{
 	Use:   "export",
@@ -176,7 +175,7 @@ func ExportData(outputFile ,esUrl,indexName,matchBody string)(err error) {
 				}
 				count++
 				bsCounter+=len(bs)
-				if count%200==0{
+				if count%10000==0{
 					log.Printf("total exported %d items; total_raw_bytes: %.2f MB", count, getMb(int64(bsCounter)))
 				}
 			}
@@ -185,8 +184,7 @@ func ExportData(outputFile ,esUrl,indexName,matchBody string)(err error) {
 			}
 		}
 		if err != nil {
-			log.Println(err)
-			time.Sleep(time.Second)
+			log.Fatalln("ScrollService err",err)
 		}
 	}
 	RETURN:

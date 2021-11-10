@@ -15,6 +15,8 @@ go build
 
 #export which match body
 ./esdump  export --es http://server1:9200  --MatchBody '{"range": {"eventTimestamp": {"gte": "2021-05-07T10:32:20.170178Z"}}}' --index events
+#export data a minites ago
+./esdump export --es http://server1:9200 -m "{\"range\": {\"eventTimestamp\": {\"gte\": \"`date  -d  "1 minutes ago" +%s `000\"}}}" --index events -o - | ./esdump import --index events -i - 
  ./esdump -h
 ./esdump import -h
 ./esdump expport -h
