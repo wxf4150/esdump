@@ -44,7 +44,7 @@ var Input string
 var enableGzip bool
 func init(){
 	exportCmd.Flags().StringVarP(&Output,"o","o","./tmp_export.json.gz","export dest filename; use - for stdout")
-	exportCmd.Flags().IntVarP(&MaxDocs,"c","c",0,"max count of documents to export")
+	exportCmd.Flags().IntVarP(&MaxDocs,"c","c",0,"set the max amount of documents to be exported; default(0) will exported all matched document; ")
 	exportCmd.Flags().StringVarP(&MatchBody,"MatchBody","m","{\"match_all\":{}}","MatchBody, empty for match_all; example:{\"range\": {\"timestamp\": {\"gte\": \"2021-04-20\"}}}")
 	exportCmd.Flags().BoolVar(&enableGzip,"gzip",true,"enable gzip; to disable gzip add parameter \"--gzip=false\"")
 
@@ -202,7 +202,7 @@ func ExportData(outputFile ,esUrl,indexName,matchBody string)(err error) {
 					return err
 				}
 				count++
-				if count>MaxDocs{
+				if count>MaxDocs && MaxDocs>0{
 					goto RETURN
 				}
 				bsCounter+=len(bs)
