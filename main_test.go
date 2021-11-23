@@ -10,6 +10,8 @@ import (
 )
 
 func Test_Gzip(t *testing.T){
+	log.Println(string([]byte("a\r\nb")))
+	return
 	infile,err:=os.Open("/home/wxf/.ssh/config")
 	if err != nil {
 		log.Fatalln(err)

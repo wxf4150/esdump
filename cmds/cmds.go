@@ -191,12 +191,13 @@ func ExportData(outputFile ,esUrl,indexName,matchBody string)(err error) {
 				item:=hitItem{hit.Id,hit.Source}
 				bs,_:=json.Marshal(&item)
 				dataLen := [4]byte{}
-				binary.BigEndian.PutUint32(dataLen[:], uint32(len(bs)))
+				binary.BigEndian.PutUint32(dataLen[:], uint32(len(bs))+1)
 				_, err = outputWriter.Write(dataLen[:])
 				if err != nil {
 					return err
 				}
 				_, err = outputWriter.Write(bs)
+				_, err = outputWriter.Write([]byte("\n"))
 				if err != nil {
 					return err
 				}
