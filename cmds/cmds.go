@@ -1,9 +1,9 @@
 package cmds
 
 import (
+	"bufio"
 	"compress/gzip"
 	"context"
-	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"github.com/olivere/elastic/v7"
@@ -69,7 +69,7 @@ func ImportData(inputFile ,esUrl,indexName string)(err error){
 	}
 	defer inFile.Close()
 
-	var dataReader io.Reader
+	var sourceReader io.Reader
 	if enableGzip{
 		zipReader,err1 := gzip.NewReader(inFile)
 		if err1 != nil {
@@ -78,34 +78,21 @@ func ImportData(inputFile ,esUrl,indexName string)(err error){
 			}
 			return err
 		}
-		dataReader=zipReader
+		sourceReader=zipReader
 		defer zipReader.Close()
 		log.Println("import gziped file")
 	}else{
-		dataReader= inFile
+		sourceReader= inFile
 		log.Println("import none gziped file")
 	}
 
+	bufReader:=bufio.NewReaderSize(sourceReader,1<<22)
 	iserv:=GetEsIndexService(esUrl,indexName)
-
-	bsLen:=[4]byte{}
-	_,err=io.ReadFull(dataReader,bsLen[:])
-	if err!=nil{
-		return err
-	}
-	dataLen:=binary.BigEndian.Uint32(bsLen[:])
-	//log.Println(dataLen)
 	counter:=0;
-	for  dataLen>0{
+	for line, _, err := bufReader.ReadLine(); err != io.EOF; line, _, err = bufReader.ReadLine() {
 		counter++
-		dataBs:=make([]byte,dataLen)
-		_,err=io.ReadFull(dataReader,dataBs)
-		if err!=nil{
-			return err
-		}
-		//log.Printf("count %d, dataLen:%d",counter,dataLen)
 		item:=new(hitItem)
-		err=json.Unmarshal(dataBs,item)
+		err=json.Unmarshal(line,item)
 		if err != nil {
 			return err
 		}
@@ -117,23 +104,16 @@ func ImportData(inputFile ,esUrl,indexName string)(err error){
 			_,err=iserv.Do(context.Background())
 			if err != nil {
 				log.Println(err)
+				err=nil
 			}
 			log.Printf("row count %d",counter)
 		}
-
-		bsLen=[4]byte{}
-		_,err=io.ReadFull(dataReader,bsLen[:])
-		if err!=nil{
-			if errors.Is(err,io.EOF){
-				err=nil
-				goto LAST
-			}
-			log.Println("bsLen read err",err)
-			return err
+		if err != nil {
+			log.Println(err)
 		}
-		dataLen=binary.BigEndian.Uint32(bsLen[:])
 	}
-	LAST:
+
+	//LAST:
 	if iserv.NumberOfActions()>0{
 		_,err=iserv.Do(context.Background())
 		if err != nil {
@@ -159,16 +139,18 @@ func ExportData(outputFile ,esUrl,indexName,matchBody string)(err error) {
 		log.Print("open file err", err)
 		return err
 	}
-	var outputWriter io.Writer
+	var targetWriter io.Writer
 	if enableGzip{
 		zip := gzip.NewWriter(ofile)
 		defer zip.Flush()
 		defer zip.Close()
-		outputWriter=zip
+		targetWriter=zip
 	}else{
-		outputWriter=ofile
+		targetWriter=ofile
 	}
 
+	outputWriter:=bufio.NewWriterSize(targetWriter,1<<22)
+	defer outputWriter.Flush()
 	ss:=GetEsScrollService(esUrl,indexName)
 	if matchBody!=""{
 		rawQuery:=elastic.NewRawStringQuery(matchBody)
@@ -190,19 +172,13 @@ func ExportData(outputFile ,esUrl,indexName,matchBody string)(err error) {
 			for _, hit := range res.Hits.Hits {
 				item:=hitItem{hit.Id,hit.Source}
 				bs,_:=json.Marshal(&item)
-				dataLen := [4]byte{}
-				binary.BigEndian.PutUint32(dataLen[:], uint32(len(bs))+1)
-				_, err = outputWriter.Write(dataLen[:])
-				if err != nil {
-					return err
-				}
 				_, err = outputWriter.Write(bs)
 				_, err = outputWriter.Write([]byte("\n"))
 				if err != nil {
 					return err
 				}
 				count++
-				if count>MaxDocs && MaxDocs>0{
+				if MaxDocs>0 && count>=MaxDocs {
 					goto RETURN
 				}
 				bsCounter+=len(bs)

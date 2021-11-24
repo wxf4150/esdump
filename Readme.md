@@ -1,9 +1,7 @@
 - elasticsearch  import export very quick.
 - write in go 
 - export ~~is~~ gziped 
-- speedup to 84 times than nodejs-[elasticsearch-dump](https://github.com/elasticsearch-dump/elasticsearch-dump)  
- - i tested on 60000 docs of raw bytes 106M ;
- 
+- speedup to 84 times than nodejs-[elasticsearch-dump](https://github.com/elasticsearch-dump/elasticsearch-dump)
 
  
  usage:
@@ -92,20 +90,13 @@ note:  res.hits.source is the document body from elasticsearch respose body
 
 the export format is below and very simple:
 ```shell script
-bytesLen(hitItem1) & hitItem1.bytes 
-bytesLen(hitItem2) & hitItem2.bytes
+{"ID":"163820696","RawData":{"id":163820696,"asset":"","imageUrl":""}}
+{"ID":"163820697","RawData":{"id":163820696,"asset":"","imageUrl":""}}
+{"ID":"163820698","RawData":{"id":163820696,"asset":"","imageUrl":""}}
 ...
 ...
 ```
-
-hitItem golang define:
-```go
-type hitItem stuct{
-{
-   doc_id string
-   doc_rawBytes json.rawMessage // json.rawMessage  type  never decode/encode when json serialize or unserialize. the exported document is stored here. 
-}
-//when export  hitItem is endcode to json_str;  i should use protoc-buffer, it will more quickly endcode.
-```
+one document one row.
+the field "RawData" in the  document.
 
 sorry my bad english
