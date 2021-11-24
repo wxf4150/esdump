@@ -31,8 +31,12 @@ WINDOWS_ARCH_LIST = \
 	windows-arm64 \
 	windows-arm32v7
 
-all: linux-amd64 darwin-amd64
-#windows-amd64 # Most used
+LINUX_LIST = \
+	linux-amd64 \
+	darwin-amd64
+
+
+all: linux-amd64 darwin-amd64 windows-amd64 # Most used
 
 docker:
 	$(GOBUILD) -o $(BINDIR)/$(NAME)-$@
@@ -100,19 +104,29 @@ windows-arm64:
 windows-arm32v7:
 	GOARCH=arm GOOS=windows GOARM=7 $(GOBUILD) -o $(BINDIR)/$(NAME)-$@.exe
 
-gz_releases=$(addsuffix .gz, $(PLATFORM_LIST))
-zip_releases=$(addsuffix .zip, $(WINDOWS_ARCH_LIST))
+#gz_releases=$(addsuffix .gz, $(PLATFORM_LIST))
+#zip_releases=$(addsuffix .zip, $(WINDOWS_ARCH_LIST))
+#
+#$(gz_releases): %.gz : %
+#	chmod +x $(BINDIR)/$(NAME)-$(basename $@)
+#	gzip -f -S -$(VERSION).gz $(BINDIR)/$(NAME)-$(basename $@)
+#
+#$(zip_releases): %.zip : %
+#	zip -m -j $(BINDIR)/$(NAME)-$(basename $@)-$(VERSION).zip $(BINDIR)/$(NAME)-$(basename $@).exe
+#
+#all-arch: $(PLATFORM_LIST) $(WINDOWS_ARCH_LIST)
+#releases: $(gz_releases) $(zip_releases)
 
-$(gz_releases): %.gz : %
+linux_releases=$(addsuffix .gz, $(LINUX_LIST))
+windows_releases=$(addsuffix .zip, windows-amd64)
+$(linux_releases): %.gz : %
 	chmod +x $(BINDIR)/$(NAME)-$(basename $@)
 	gzip -f -S -$(VERSION).gz $(BINDIR)/$(NAME)-$(basename $@)
-
-$(zip_releases): %.zip : %
+$(windows_releases): %.zip : %
 	zip -m -j $(BINDIR)/$(NAME)-$(basename $@)-$(VERSION).zip $(BINDIR)/$(NAME)-$(basename $@).exe
+#only window mac  linux amd64
+releases: $(linux_releases) $(windows_releases)
 
-all-arch: $(PLATFORM_LIST) $(WINDOWS_ARCH_LIST)
-
-releases: $(gz_releases) $(zip_releases)
 
 lint:
 	golangci-lint run --disable-all -E govet -E gofumpt -E megacheck ./...
