@@ -2,8 +2,8 @@ NAME=esdump
 BINDIR=bin
 VERSION=$(shell git describe --tags || echo "unknown version")
 BUILDTIME=$(shell date -u)
-GOBUILD=CGO_ENABLED=0 go build -trimpath -ldflags '-X "esdump/cmds/constant.Version=$(VERSION)" \
-		-X "esdump/cmds/constant.BuildTime=$(BUILDTIME)" \
+GOBUILD=CGO_ENABLED=0 go build -trimpath -ldflags '-X "esdump/cmds.Version=$(VERSION)" \
+		-X "esdump/cmds.BuildTime=$(BUILDTIME)" \
 		-w -s -buildid='
 
 PLATFORM_LIST = \
