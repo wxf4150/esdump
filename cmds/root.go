@@ -31,7 +31,10 @@ func Execute() {
 		os.Exit(1)
 	}
 }
-
+var (
+	Version   = "unknown version"
+	BuildTime = "unknown time"
+)
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
 	Use:   "esdump",
@@ -44,6 +47,7 @@ var RootCmd = &cobra.Command{
 		},
 		PersistentPreRun:func(cmd *cobra.Command, args []string){
 			log.SetOutput(os.Stderr)
+			log.Println("binary version:",Version,"build Time:",BuildTime)
 			log.Println("execute ",cmd.Use)
 			timeStart=time.Now()
 		},
@@ -63,5 +67,14 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&IndexName,"index","my_index","index name")
 	RootCmd.MarkFlagRequired("es")
 	RootCmd.MarkFlagRequired("index")
+	RootCmd.AddCommand(versionCmd)
+}
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "print version",
+	Long:  `print version`,
+	Run: func(cmd *cobra.Command, args []string) {
+	},
 }
 
