@@ -2,7 +2,7 @@
 - write in go 
 - export ~~is~~ gziped 
 - speedup to 84 times than nodejs-[elasticsearch-dump](https://github.com/elasticsearch-dump/elasticsearch-dump)
-
+- performance test: with small document the export speed is 14M/s, bigger document the speed up to 27M/s. 
  
  usage:
  ```shell script
