@@ -13,6 +13,7 @@ import (
 	"math"
 	"os"
 	"strings"
+	"time"
 )
 var exportCmd = &cobra.Command{
 	Use:   "export",
@@ -161,13 +162,16 @@ func ExportData(outputFile ,esUrl,indexName,matchBody string)(err error) {
 	pcounter := 0
 	count:=0
 	bsCounter:=0
+	fetchTime:=0.0
 	for{
 		pcounter++;
 		//for test
 		//if pcounter > 5 {
 		//	break
 		//}
+		startTime:=time.Now()
 		res,err:=pager.Do(context.Background())
+		fetchTime+=time.Now().Sub(startTime).Seconds()
 		if err == nil {
 			for _, hit := range res.Hits.Hits {
 				item:=hitItem{hit.Id,hit.Source}
@@ -183,7 +187,8 @@ func ExportData(outputFile ,esUrl,indexName,matchBody string)(err error) {
 				}
 				bsCounter+=len(bs)
 				if count%10000==0{
-					log.Printf("total exported %d items; total_raw_bytes: %.2f MB", count, getMb(int64(bsCounter)))
+					log.Printf("total exported %d items; total_raw_bytes: %.2f MB; esFetchtime %f", count, getMb(int64(bsCounter)),fetchTime)
+					fetchTime=0
 				}
 			}
 			if len(res.Hits.Hits)<100{
@@ -203,7 +208,7 @@ func ExportData(outputFile ,esUrl,indexName,matchBody string)(err error) {
 		fsize := getMb(stat.Size())
 		log.Printf("total exported %d items; total_raw_bytes: %.2f MB;the gzip size: %.2f MB", count, getMb(int64(bsCounter)), fsize)
 	}else{
-		log.Printf("total exported %d items; total_raw_bytes: %.2f MB;", count, getMb(int64(bsCounter)))
+		log.Printf("total exported %d items; total_raw_bytes: %.2f MB; esFetchtime %f", count, getMb(int64(bsCounter)),fetchTime)
 	}
 	return err
 }
