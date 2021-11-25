@@ -160,55 +160,73 @@ func ExportData(outputFile ,esUrl,indexName,matchBody string)(err error) {
 	}
 	pager:=ss.Size(100)//.Query(elastic.MatchAllQuery{})
 	pcounter := 0
-	count:=0
-	bsCounter:=0
+	count :=0
+	dataChan :=make(chan interface{},300)
 	fetchTime:=0.0
-	for{
-		pcounter++;
-		//for test
-		//if pcounter > 5 {
-		//	break
-		//}
-		startTime:=time.Now()
-		res,err:=pager.Do(context.Background())
-		fetchTime+=time.Now().Sub(startTime).Seconds()
-		if err == nil {
-			for _, hit := range res.Hits.Hits {
-				item:=hitItem{hit.Id,hit.Source}
-				bs,_:=json.Marshal(&item)
-				_, err = outputWriter.Write(bs)
-				_, err = outputWriter.Write([]byte("\n"))
-				if err != nil {
-					return err
+	totalFetchTime:=0.0
+	go func() {
+		defer close(dataChan)
+		for {
+			//for test
+			startTime := time.Now()
+			res, err := pager.Do(context.Background())
+			spend:=time.Now().Sub(startTime).Seconds()
+			fetchTime += spend
+			totalFetchTime+=spend
+			pcounter++;
+			if pcounter % 1000 ==0 {
+				log.Println("1000 pages FetchTime", fetchTime, "s")
+				fetchTime=0
+			}
+			if err == nil {
+				for _, hit := range res.Hits.Hits {
+					dataChan <- *hit
+					count++
+					if MaxDocs > 0 && count >= MaxDocs {
+						goto END
+					}
 				}
-				count++
-				if MaxDocs>0 && count>=MaxDocs {
-					goto RETURN
-				}
-				bsCounter+=len(bs)
-				if count%10000==0{
-					log.Printf("total exported %d items; total_raw_bytes: %.2f MB; esFetchtime %f", count, getMb(int64(bsCounter)),fetchTime)
-					fetchTime=0
+				if len(res.Hits.Hits) < 100 {
+					goto END
 				}
 			}
-			if len(res.Hits.Hits)<100{
-				goto RETURN
+			if err != nil {
+				log.Fatalln("ScrollService err", err)
 			}
 		}
+	END:
+		log.Println("totalFetchTime", totalFetchTime, "s")
+	}()
+
+	storeTime :=0.0
+	bsCounter:=0
+	storeCount :=0
+	for  chanItem := range dataChan {
+		storeCount +=1
+		hit:=chanItem.(elastic.SearchHit)
+		item:=hitItem{hit.Id,hit.Source}
+		bs,_:=json.Marshal(&item)
+		_, err = outputWriter.Write(bs)
+		_, err = outputWriter.Write([]byte("\n"))
 		if err != nil {
-			log.Fatalln("ScrollService err",err)
+			log.Println("io err:",err)
+			break
+		}
+		bsCounter+=len(bs)
+		if storeCount%10000==0{
+			log.Printf("total exported %d items; total_raw_bytes: %.2f MB; storeTime %f", storeCount, getMb(int64(bsCounter)), storeTime)
+			storeTime =0
 		}
 	}
-	RETURN:
 	if err != nil {
 		log.Print(err)
 	}
 	if  enableGzip {
 		stat, _ := ofile.Stat()
 		fsize := getMb(stat.Size())
-		log.Printf("total exported %d items; total_raw_bytes: %.2f MB;the gzip size: %.2f MB", count, getMb(int64(bsCounter)), fsize)
+		log.Printf("total exported %d items; total_raw_bytes: %.2f MB;the gzip size: %.2f MB", storeCount, getMb(int64(bsCounter)), fsize)
 	}else{
-		log.Printf("total exported %d items; total_raw_bytes: %.2f MB; esFetchtime %f", count, getMb(int64(bsCounter)),fetchTime)
+		log.Printf("total exported %d items; total_raw_bytes: %.2f MB; storeTime %f", storeCount, getMb(int64(bsCounter)), storeTime)
 	}
 	return err
 }
